@@ -1,0 +1,1446 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>视频提示词生成器</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --panel-soft: #f0f3f7;
+      --text: #172033;
+      --muted: #687387;
+      --line: #dfe4ec;
+      --accent: #2167d5;
+      --accent-weak: #e8f0ff;
+      --green: #1f8f64;
+      --orange: #b76015;
+      --shadow: 0 16px 40px rgba(28, 39, 64, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+      letter-spacing: 0;
+    }
+
+    button,
+    textarea,
+    input {
+      font: inherit;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--line);
+      background: rgba(246, 247, 249, 0.92);
+      backdrop-filter: blur(18px);
+    }
+
+    .topbar-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      min-width: 0;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.15;
+      font-weight: 760;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .layout {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr) 360px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .panel-header h2,
+    .section-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 720;
+    }
+
+    .panel-header span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .panel-body {
+      padding: 16px;
+    }
+
+    .template-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .template-button {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      display: grid;
+      gap: 2px;
+      transition: 0.16s ease;
+    }
+
+    .template-button strong {
+      font-size: 14px;
+      font-weight: 680;
+    }
+
+    .template-button small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .template-button:hover,
+    .template-button.active {
+      border-color: var(--accent);
+      background: var(--accent-weak);
+    }
+
+    .model-links {
+      margin-top: 16px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .model-link {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      background: #fff;
+      transition: 0.16s ease;
+    }
+
+    .model-link:hover {
+      border-color: #b9c7dd;
+      background: #fbfcff;
+    }
+
+    .model-link strong {
+      font-size: 13px;
+    }
+
+    .model-link span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .builder {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field-block {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .field-head {
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .field-head label {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .field-head span {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .input-group {
+      display: grid;
+      gap: 6px;
+    }
+
+    .input-group span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 74px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px 11px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(33, 103, 213, 0.12);
+    }
+
+    .chip-row {
+      padding: 0 14px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: #29354a;
+      padding: 7px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.16s ease;
+    }
+
+    .chip:hover {
+      border-color: var(--accent);
+      background: var(--accent-weak);
+    }
+
+    .result-panel {
+      position: sticky;
+      top: 86px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .result-text {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      min-height: 138px;
+      padding: 12px;
+      background: #fbfcfe;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 14px;
+    }
+
+    .result-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .result-lang {
+      display: grid;
+      gap: 8px;
+    }
+
+    .result-lang h3 {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--text);
+      min-height: 38px;
+      padding: 8px 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-weight: 680;
+      transition: 0.16s ease;
+      white-space: nowrap;
+    }
+
+    .button:hover {
+      border-color: #b8c4d8;
+      background: #f9fbfe;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .button.primary:hover {
+      background: #185abe;
+    }
+
+    .button.ghost {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .button.icon {
+      width: 38px;
+      padding: 0;
+      font-size: 17px;
+    }
+
+    .button.saved {
+      color: var(--orange);
+      border-color: #e6c7a7;
+      background: #fff7ef;
+    }
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .history-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 7px;
+      padding: 8px;
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .tab.active {
+      color: var(--accent);
+      background: var(--accent-weak);
+      border-color: var(--accent);
+    }
+
+    .history-list {
+      display: grid;
+      gap: 8px;
+      max-height: 320px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .history-item {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px;
+      background: #fff;
+      display: grid;
+      gap: 8px;
+    }
+
+    .history-item strong {
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .history-item small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mini {
+      min-height: 30px;
+      padding: 5px 9px;
+      font-size: 12px;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 8px 0;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      background: #172033;
+      color: #fff;
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-size: 13px;
+      box-shadow: var(--shadow);
+      transition: 0.2s ease;
+      z-index: 20;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 1120px) {
+      .layout {
+        grid-template-columns: 240px minmax(0, 1fr);
+      }
+
+      .result-panel {
+        grid-column: 1 / -1;
+        position: static;
+      }
+
+      .result-panel .panel-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 16px;
+      }
+    }
+
+    @media (max-width: 780px) {
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .top-actions {
+        width: 100%;
+        justify-content: stretch;
+      }
+
+      .top-actions .button {
+        flex: 1;
+      }
+
+      .layout {
+        padding: 14px;
+        grid-template-columns: 1fr;
+      }
+
+      .field-grid,
+      .result-panel .panel-body {
+        grid-template-columns: 1fr;
+      }
+
+      .result-panel {
+        order: -1;
+      }
+
+      .brand h1 {
+        font-size: 20px;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .actions-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .panel-header,
+      .field-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .field-head span {
+        text-align: left;
+      }
+    }
+
+    .layout {
+      grid-template-columns: minmax(0, 1fr) 390px;
+    }
+
+    .template-panel {
+      grid-column: 1 / -1;
+      box-shadow: none;
+    }
+
+    .template-panel .panel-body {
+      padding-top: 12px;
+    }
+
+    .template-list {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .builder-shell {
+      display: grid;
+      gap: 16px;
+    }
+
+    .step-panel {
+      overflow: hidden;
+    }
+
+    .step-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-index {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-weak);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 760;
+      flex: 0 0 auto;
+    }
+
+    .builder {
+      gap: 16px;
+    }
+
+    .field-group {
+      display: grid;
+      gap: 10px;
+    }
+
+    .group-title {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 780;
+    }
+
+    .field-grid {
+      grid-template-columns: 1fr;
+    }
+
+    textarea {
+      min-height: 70px;
+    }
+
+    .english-details {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfcfe;
+    }
+
+    .english-details summary {
+      cursor: pointer;
+      padding: 9px 11px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      list-style-position: inside;
+    }
+
+    .english-details .input-group {
+      padding: 0 10px 10px;
+    }
+
+    .result-panel {
+      top: 88px;
+    }
+
+    .result-panel .panel-body {
+      display: block;
+    }
+
+    .result-text {
+      min-height: 154px;
+    }
+
+    .result-primary-actions {
+      margin: 14px 0 16px;
+    }
+
+    .model-links {
+      margin-top: 0;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .model-heading {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 780;
+    }
+
+    .model-link {
+      min-height: 42px;
+      padding: 9px 10px;
+    }
+
+    .history-area {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .mobile-action-bar {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 12;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(246, 247, 249, 0.94);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(18px);
+      grid-template-columns: 1fr 1fr 44px;
+      gap: 8px;
+    }
+
+    @media (max-width: 1120px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .result-panel {
+        position: static;
+      }
+
+      .result-panel .panel-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 16px;
+      }
+
+      .history-area {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+      }
+    }
+
+    @media (max-width: 780px) {
+      body {
+        padding-bottom: 74px;
+      }
+
+      .layout {
+        gap: 14px;
+      }
+
+      .template-list {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scroll-snap-type: x mandatory;
+      }
+
+      .template-button {
+        min-width: 156px;
+        scroll-snap-align: start;
+      }
+
+      .result-panel {
+        order: 3;
+      }
+
+      .builder-shell {
+        order: 2;
+      }
+
+      .template-panel {
+        order: 1;
+      }
+
+      .mobile-action-bar {
+        display: grid;
+      }
+
+      .top-actions {
+        display: none;
+      }
+
+      .result-panel .panel-body {
+        grid-template-columns: 1fr;
+      }
+
+      .model-links {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .model-links {
+        grid-template-columns: 1fr;
+      }
+
+      .mobile-action-bar {
+        grid-template-columns: 1fr 44px;
+      }
+
+      .mobile-action-bar [data-copy="cn"] {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <h1>视频提示词生成器</h1>
+          <p>按 Seedance / AI 视频通用结构生成中英文提示词</p>
+        </div>
+        <div class="top-actions">
+          <a class="button" href="https://github.com/holynova/video_prompt_generator" target="_blank" rel="noreferrer">GitHub Repo</a>
+          <button class="button primary" id="saveBtn" type="button">保存到历史</button>
+          <button class="button" id="resetBtn" type="button">清空重写</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel template-panel">
+        <div class="panel-header">
+          <div class="step-title">
+            <span class="step-index">1</span>
+            <h2>选择场景模板</h2>
+          </div>
+          <span>先定镜头类型</span>
+        </div>
+        <div class="panel-body">
+          <div class="template-list" id="templateList"></div>
+        </div>
+      </section>
+
+      <section class="panel step-panel builder-shell">
+        <div class="panel-header">
+          <div class="step-title">
+            <span class="step-index">2</span>
+            <h2>补充画面细节</h2>
+          </div>
+          <span>中文优先，英文可展开微调</span>
+        </div>
+        <div class="panel-body">
+          <section class="builder" id="builder"></section>
+        </div>
+      </section>
+
+      <aside class="result-panel">
+        <section class="panel">
+          <div class="panel-header">
+            <div class="step-title">
+              <span class="step-index">3</span>
+              <h2>复制并生成视频</h2>
+            </div>
+            <span id="activeTemplateName">未选择模板</span>
+          </div>
+          <div class="panel-body">
+            <div class="result-stack">
+              <div class="result-lang">
+                <h3>中文 Prompt <button class="button mini" data-copy="cn" type="button">复制中文</button></h3>
+                <div class="result-text" id="resultCn"></div>
+              </div>
+              <div class="result-lang">
+                <h3>English Prompt <button class="button mini" data-copy="en" type="button">Copy English</button></h3>
+                <div class="result-text" id="resultEn"></div>
+              </div>
+            </div>
+            <div class="result-side">
+              <div class="actions-grid result-primary-actions">
+                <button class="button primary" data-copy="both" type="button">复制双语</button>
+                <button class="button" id="favoriteCurrentBtn" type="button">收藏当前</button>
+              </div>
+              <a class="model-link" href="https://github.com/holynova/video_prompt_generator" target="_blank" rel="noreferrer">
+                <strong>GitHub Repo</strong><span>查看源码</span>
+              </a>
+              <div style="height: 12px"></div>
+              <h3 class="model-heading">模型入口</h3>
+              <div class="model-links" aria-label="常用视频模型链接">
+                <a class="model-link" href="https://jimeng.jianying.com/" target="_blank" rel="noreferrer">
+                  <strong>即梦 AI</strong><span>打开</span>
+                </a>
+                <a class="model-link" href="https://dreamina.capcut.com/" target="_blank" rel="noreferrer">
+                  <strong>Dreamina</strong><span>打开</span>
+                </a>
+                <a class="model-link" href="https://klingai.com/" target="_blank" rel="noreferrer">
+                  <strong>Kling AI</strong><span>打开</span>
+                </a>
+                <a class="model-link" href="https://runwayml.com/" target="_blank" rel="noreferrer">
+                  <strong>Runway</strong><span>打开</span>
+                </a>
+                <a class="model-link" href="https://lumalabs.ai/dream-machine" target="_blank" rel="noreferrer">
+                  <strong>Luma</strong><span>打开</span>
+                </a>
+                <a class="model-link" href="https://pika.art/" target="_blank" rel="noreferrer">
+                  <strong>Pika</strong><span>打开</span>
+                </a>
+                <a class="model-link" href="https://hailuoai.video/" target="_blank" rel="noreferrer">
+                  <strong>Hailuo</strong><span>打开</span>
+                </a>
+                <a class="model-link" href="https://www.vidu.com/" target="_blank" rel="noreferrer">
+                  <strong>Vidu</strong><span>打开</span>
+                </a>
+                <a class="model-link" href="https://sora.chatgpt.com/" target="_blank" rel="noreferrer">
+                  <strong>Sora</strong><span>打开</span>
+                </a>
+                <a class="model-link" href="https://labs.google/fx/tools/flow" target="_blank" rel="noreferrer">
+                  <strong>Flow</strong><span>打开</span>
+                </a>
+              </div>
+            </div>
+            <div class="history-area">
+              <div class="actions-grid">
+                <button class="button" id="saveBtnSecondary" type="button">保存到历史</button>
+                <button class="button ghost" id="clearHistoryBtn" type="button">清空历史</button>
+              </div>
+              <div style="height: 16px"></div>
+              <div class="history-tabs">
+                <button class="tab active" data-history-tab="all" type="button">历史</button>
+                <button class="tab" data-history-tab="favorites" type="button">收藏</button>
+              </div>
+              <div class="history-list" id="historyList"></div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="mobile-action-bar" aria-label="快速操作">
+    <button class="button primary" data-copy="both" type="button">复制双语</button>
+    <button class="button" data-copy="cn" type="button">复制中文</button>
+    <button class="button icon" id="favoriteMobileBtn" type="button" aria-label="收藏当前">☆</button>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const fields = [
+      {
+        key: "shot",
+        label: "景别",
+        hint: "镜头距离与构图范围",
+        cnPlaceholder: "例如：中景、近景、航拍全景",
+        enPlaceholder: "e.g. medium shot, close-up, aerial wide shot",
+        chips: [
+          ["特写", "close-up"],
+          ["中景", "medium shot"],
+          ["全景", "wide shot"],
+          ["航拍全景", "aerial wide shot"],
+          ["低角度近景", "low-angle close shot"]
+        ]
+      },
+      {
+        key: "subject",
+        label: "主体描述",
+        hint: "人物、产品、地点、外观细节",
+        cnPlaceholder: "例如：一位身穿白裙的年轻女生",
+        enPlaceholder: "e.g. a young woman in a white dress",
+        chips: [
+          ["年轻女生", "a young woman"],
+          ["科技产品", "a sleek tech product"],
+          ["城市街道", "a city street"],
+          ["山谷湖泊", "a mountain lake valley"],
+          ["复古汽车", "a vintage car"]
+        ]
+      },
+      {
+        key: "action",
+        label: "动作",
+        hint: "慢、连续、具体，避免只写抽象情绪",
+        cnPlaceholder: "例如：在花海中缓慢旋转，裙摆随风展开",
+        enPlaceholder: "e.g. slowly spinning in a flower field as the dress opens in the breeze",
+        chips: [
+          ["缓慢转身", "slowly turns around"],
+          ["向镜头走来", "walks toward the camera"],
+          ["沿街奔跑", "runs along the street"],
+          ["产品缓慢旋转", "the product slowly rotates"],
+          ["云层缓慢流动", "clouds drift slowly"]
+        ]
+      },
+      {
+        key: "camera",
+        label: "运镜指令",
+        hint: "建议 1-2 个组合",
+        cnPlaceholder: "例如：缓慢环绕半圈 + 轻微推镜",
+        enPlaceholder: "e.g. slow half orbit + subtle dolly in",
+        chips: [
+          ["缓慢推镜", "slow dolly in"],
+          ["环绕推进", "orbit with subtle push-in"],
+          ["缓慢横移", "slow lateral pan"],
+          ["航拍下降", "aerial crane down"],
+          ["跟拍 + 轻微手持", "tracking shot with subtle handheld motion"]
+        ]
+      },
+      {
+        key: "lighting",
+        label: "光影氛围",
+        hint: "时间、光源、色温、空气感",
+        cnPlaceholder: "例如：黄昏暖光，逆光剪影",
+        enPlaceholder: "e.g. warm golden-hour light, backlit silhouette",
+        chips: [
+          ["黄昏暖光", "warm golden-hour light"],
+          ["柔和窗光", "soft window light"],
+          ["霓虹夜景", "neon night atmosphere"],
+          ["清晨薄雾", "misty early morning"],
+          ["高对比边缘光", "high-contrast rim light"]
+        ]
+      },
+      {
+        key: "style",
+        label: "风格标签",
+        hint: "审美、类型、情绪修饰",
+        cnPlaceholder: "例如：唯美文艺，日系清新",
+        enPlaceholder: "e.g. poetic, Japanese fresh aesthetic",
+        chips: [
+          ["电影感", "cinematic"],
+          ["唯美文艺", "poetic and elegant"],
+          ["日系清新", "Japanese fresh aesthetic"],
+          ["梦境感", "dreamy"],
+          ["赛博朋克", "cyberpunk"]
+        ]
+      },
+      {
+        key: "quality",
+        label: "画质标签",
+        hint: "清晰度、细节、镜头质感",
+        cnPlaceholder: "例如：4K超高清，细节丰富，真实镜头质感",
+        enPlaceholder: "e.g. 4K ultra high definition, rich details, realistic lens texture",
+        chips: [
+          ["4K超高清", "4K ultra high definition"],
+          ["细节丰富", "rich details"],
+          ["真实镜头质感", "realistic lens texture"],
+          ["浅景深", "shallow depth of field"],
+          ["干净构图", "clean composition"]
+        ]
+      },
+      {
+        key: "constraints",
+        label: "稳定性约束",
+        hint: "负面限制和稳定输出要求",
+        cnPlaceholder: "例如：画面稳定不抖动，面部清晰不变形",
+        enPlaceholder: "e.g. stable footage, no shaking, clear face without deformation",
+        chips: [
+          ["画面稳定不抖动", "stable footage, no shaking"],
+          ["面部清晰不变形", "clear face without deformation"],
+          ["避免多余肢体", "avoid extra limbs"],
+          ["避免快速闪烁", "avoid rapid flickering"],
+          ["避免多重复合运镜", "avoid overly complex camera moves"]
+        ]
+      }
+    ];
+
+    const templates = [
+      {
+        id: "portrait",
+        title: "人像特写",
+        desc: "亲密、平滑、缓慢推镜",
+        values: {
+          shot: ["近景人像特写", "portrait close-up"],
+          subject: ["一位神情自然、面部清晰的人物", "a person with a natural expression and a clear face"],
+          action: ["缓慢抬眼看向镜头，呼吸自然，表情细微变化", "slowly raises their eyes toward the camera, breathing naturally with subtle expression changes"],
+          camera: ["Dolly In 缓慢推镜", "slow dolly in"],
+          lighting: ["柔和窗光，肤色自然，背景轻微虚化", "soft window light, natural skin tones, gently blurred background"],
+          style: ["Intimate, Smooth, 电影感", "intimate, smooth, cinematic"],
+          quality: ["4K超高清，面部细节丰富，浅景深", "4K ultra high definition, rich facial details, shallow depth of field"],
+          constraints: ["避免快速变焦，画面稳定不抖动，面部清晰不变形", "avoid fast zooms, stable footage with no shaking, clear face without deformation"]
+        }
+      },
+      {
+        id: "landscape",
+        title: "风景全景",
+        desc: "航拍、横移、开阔空间",
+        values: {
+          shot: ["航拍全景", "aerial wide shot"],
+          subject: ["辽阔山谷、湖泊与远处云层", "a vast valley, lake, and distant clouds"],
+          action: ["云影缓慢掠过山坡，水面轻微反光", "cloud shadows slowly pass over the hills, the water reflects gentle highlights"],
+          camera: ["Aerial 缓慢横移 + Slow Pan", "aerial slow lateral move + slow pan"],
+          lighting: ["清晨薄雾，柔和自然光", "misty early morning with soft natural light"],
+          style: ["Cinematic, Dreamy, 宁静开阔", "cinematic, dreamy, calm and expansive"],
+          quality: ["4K超高清，层次丰富，远景清晰", "4K ultra high definition, rich depth, clear distant scenery"],
+          constraints: ["避免手持晃动，避免固定死板构图", "avoid handheld shaking, avoid static rigid framing"]
+        }
+      },
+      {
+        id: "action",
+        title: "动作追逐",
+        desc: "跟拍、速度感、冲击力",
+        values: {
+          shot: ["中近景跟拍", "medium close tracking shot"],
+          subject: ["一名穿深色外套的角色穿过城市巷道", "a character in a dark jacket moving through urban alleys"],
+          action: ["快速奔跑并连续转弯，衣摆和发丝随动作摆动", "runs fast and turns continuously, coat hem and hair moving with the action"],
+          camera: ["Tracking + 轻微 Handheld", "tracking shot + subtle handheld motion"],
+          lighting: ["夜晚街灯与反射湿地面，高对比光影", "night street lights reflected on wet pavement, high-contrast lighting"],
+          style: ["Fast, Aggressive, 电影动作片质感", "fast, aggressive, cinematic action style"],
+          quality: ["高清动态细节，运动模糊自然", "high-definition motion details, natural motion blur"],
+          constraints: ["避免固定机位，主体始终清晰可辨，避免严重拖影", "avoid static camera, keep the subject clearly readable, avoid heavy smearing"]
+        }
+      },
+      {
+        id: "product",
+        title: "产品展示",
+        desc: "环绕、推进、干净商业感",
+        values: {
+          shot: ["产品中近景", "medium close product shot"],
+          subject: ["一款极简设计的智能设备置于干净桌面", "a minimalist smart device placed on a clean tabletop"],
+          action: ["产品缓慢旋转，表面材质和边缘高光逐渐显现", "the product slowly rotates as material texture and edge highlights appear"],
+          camera: ["Orbit + Zoom 环绕推进", "orbit + subtle zoom push-in"],
+          lighting: ["柔和棚拍光，边缘轮廓光清晰", "soft studio lighting with clear rim highlights"],
+          style: ["Smooth, Subtle, 高级商业广告感", "smooth, subtle, premium commercial style"],
+          quality: ["4K超高清，材质细节丰富，构图干净", "4K ultra high definition, rich material details, clean composition"],
+          constraints: ["避免大幅度运动，产品形状稳定不变形", "avoid large camera movement, keep product shape stable without deformation"]
+        }
+      },
+      {
+        id: "opening",
+        title: "开场/结尾",
+        desc: "升降摇移、叙事建立",
+        values: {
+          shot: ["远景开场镜头", "wide establishing shot"],
+          subject: ["城市天际线与逐渐亮起的建筑灯光", "a city skyline with building lights gradually turning on"],
+          action: ["天空从蓝调时刻过渡到夜色，车流形成柔和光轨", "the sky shifts from blue hour into night, traffic forms soft light trails"],
+          camera: ["Crane Up + Pan 升降摇移", "crane up + pan"],
+          lighting: ["蓝调夜色，城市灯光层次分明", "blue-hour night tones with layered city lights"],
+          style: ["Cinematic, Slow, 稳重开篇", "cinematic, slow, strong opening mood"],
+          quality: ["4K超高清，远近层次清晰", "4K ultra high definition, clear foreground and background depth"],
+          constraints: ["避免多重复合运镜，画面稳定，节奏舒缓", "avoid overly complex camera moves, stable frame, calm pacing"]
+        }
+      },
+      {
+        id: "dream",
+        title: "回忆/梦境",
+        desc: "梦幻、轻微变焦、慢摇",
+        values: {
+          shot: ["柔焦中景", "soft-focus medium shot"],
+          subject: ["一条被阳光照亮的老街和缓慢走过的人影", "an old street lit by sunlight with a figure slowly walking through"],
+          action: ["画面轻微漂浮，人物经过时光影缓慢变化", "the frame gently floats as light and shadow shift while the figure passes"],
+          camera: ["Dolly Zoom + Slow Pan", "dolly zoom + slow pan"],
+          lighting: ["暖色逆光，轻微胶片颗粒，空气中有尘埃感", "warm backlight, subtle film grain, dusty atmosphere in the air"],
+          style: ["Dreamy, Subtle, 怀旧回忆感", "dreamy, subtle, nostalgic memory mood"],
+          quality: ["细节柔和，色彩自然，电影胶片质感", "soft details, natural color, cinematic film texture"],
+          constraints: ["避免快速切换，避免过度扭曲，主体轮廓保持稳定", "avoid fast cuts, avoid excessive distortion, keep subject silhouette stable"]
+        }
+      },
+      {
+        id: "night-city",
+        title: "城市夜景",
+        desc: "航拍俯冲、霓虹、电影感",
+        values: {
+          shot: ["城市夜景航拍", "aerial city night shot"],
+          subject: ["霓虹灯牌、雨后街道和密集高楼", "neon signs, rain-soaked streets, and dense high-rise buildings"],
+          action: ["车流缓慢穿过街区，灯光在湿润路面反射", "traffic slowly moves through the blocks, lights reflecting on the wet road"],
+          camera: ["Aerial Crane Down 俯冲 + 轻微 Pan", "aerial crane down + subtle pan"],
+          lighting: ["赛博朋克霓虹，高对比冷暖色", "cyberpunk neon lighting with high-contrast warm and cool colors"],
+          style: ["Cyberpunk, Cinematic, 都市未来感", "cyberpunk, cinematic, futuristic urban mood"],
+          quality: ["4K超高清，夜景噪点低，灯光细节丰富", "4K ultra high definition, low noise night scene, rich light details"],
+          constraints: ["避免固定近景，避免画面闪烁，建筑结构稳定", "avoid static close-up framing, avoid flickering, keep building structures stable"]
+        }
+      }
+    ];
+
+    const state = {
+      activeTemplate: "",
+      historyTab: "all",
+      values: Object.fromEntries(fields.map((field) => [field.key, ["", ""]]))
+    };
+
+    const fieldGroups = [
+      { title: "画面基础", keys: ["shot", "subject"] },
+      { title: "动作与运镜", keys: ["action", "camera"] },
+      { title: "氛围与风格", keys: ["lighting", "style"] },
+      { title: "输出约束", keys: ["quality", "constraints"] }
+    ];
+
+    const storageKey = "video-prompt-generator-history-v1";
+    const builder = document.querySelector("#builder");
+    const templateList = document.querySelector("#templateList");
+    const resultCn = document.querySelector("#resultCn");
+    const resultEn = document.querySelector("#resultEn");
+    const historyList = document.querySelector("#historyList");
+    const toast = document.querySelector("#toast");
+    const activeTemplateName = document.querySelector("#activeTemplateName");
+
+    function renderBuilder() {
+      builder.innerHTML = fieldGroups.map((group) => `
+        <div class="field-group">
+          <h3 class="group-title">${group.title}</h3>
+          ${group.keys.map((key) => {
+            const field = fields.find((item) => item.key === key);
+            return `
+              <div class="field-block" data-field="${field.key}">
+                <div class="field-head">
+                  <label>${field.label}</label>
+                  <span>${field.hint}</span>
+                </div>
+                <div class="field-grid">
+                  <div class="input-group">
+                    <span>中文</span>
+                    <textarea data-input="${field.key}" data-lang="cn" placeholder="${field.cnPlaceholder}"></textarea>
+                  </div>
+                  <details class="english-details">
+                    <summary>English prompt field</summary>
+                    <div class="input-group">
+                      <span>English</span>
+                      <textarea data-input="${field.key}" data-lang="en" placeholder="${field.enPlaceholder}"></textarea>
+                    </div>
+                  </details>
+                </div>
+                <div class="chip-row">
+                  ${field.chips.map((chip) => `<button class="chip" type="button" data-chip-field="${field.key}" data-cn="${chip[0]}" data-en="${chip[1]}">${chip[0]}</button>`).join("")}
+                </div>
+              </div>
+            `;
+          }).join("")}
+          </div>
+      `).join("");
+    }
+
+    function renderTemplates() {
+      templateList.innerHTML = templates.map((template) => `
+        <button class="template-button" type="button" data-template="${template.id}">
+          <strong>${template.title}</strong>
+          <small>${template.desc}</small>
+        </button>
+      `).join("");
+    }
+
+    function getPrompt(lang) {
+      const index = lang === "cn" ? 0 : 1;
+      const parts = fields
+        .map((field) => (state.values[field.key][index] || "").trim())
+        .filter(Boolean);
+      return parts.length ? parts.join(lang === "cn" ? "，" : ", ") : "等待填写内容...";
+    }
+
+    function syncInputs() {
+      document.querySelectorAll("[data-input]").forEach((input) => {
+        const key = input.dataset.input;
+        const index = input.dataset.lang === "cn" ? 0 : 1;
+        input.value = state.values[key][index];
+      });
+    }
+
+    function updateResult() {
+      resultCn.textContent = getPrompt("cn");
+      resultEn.textContent = getPrompt("en");
+      const active = templates.find((template) => template.id === state.activeTemplate);
+      activeTemplateName.textContent = active ? active.title : "未选择模板";
+      document.querySelectorAll("[data-template]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.template === state.activeTemplate);
+      });
+    }
+
+    function setFieldValue(key, cn, en, append = false) {
+      if (append) {
+        state.values[key][0] = appendValue(state.values[key][0], cn, "，");
+        state.values[key][1] = appendValue(state.values[key][1], en, ", ");
+      } else {
+        state.values[key] = [cn, en];
+      }
+    }
+
+    function appendValue(current, next, separator) {
+      if (!next) return current;
+      if (!current) return next;
+      if (current.includes(next)) return current;
+      return `${current}${separator}${next}`;
+    }
+
+    function applyTemplate(id) {
+      const template = templates.find((item) => item.id === id);
+      if (!template) return;
+      state.activeTemplate = id;
+      fields.forEach((field) => {
+        const value = template.values[field.key] || ["", ""];
+        setFieldValue(field.key, value[0], value[1]);
+      });
+      syncInputs();
+      updateResult();
+      showToast(`已套用：${template.title}`);
+    }
+
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey)) || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function setHistory(history) {
+      localStorage.setItem(storageKey, JSON.stringify(history.slice(0, 60)));
+    }
+
+    function makeHistoryItem(favorite = false) {
+      const active = templates.find((template) => template.id === state.activeTemplate);
+      return {
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        createdAt: new Date().toISOString(),
+        title: active ? active.title : (state.values.subject[0] || state.values.subject[1] || "自定义提示词"),
+        template: state.activeTemplate,
+        values: JSON.parse(JSON.stringify(state.values)),
+        cn: getPrompt("cn"),
+        en: getPrompt("en"),
+        favorite
+      };
+    }
+
+    function saveCurrent(favorite = false) {
+      const item = makeHistoryItem(favorite);
+      const history = getHistory();
+      history.unshift(item);
+      setHistory(history);
+      renderHistory();
+      showToast(favorite ? "已收藏当前提示词" : "已保存到历史");
+    }
+
+    function renderHistory() {
+      const history = getHistory();
+      const visible = state.historyTab === "favorites" ? history.filter((item) => item.favorite) : history;
+      if (!visible.length) {
+        historyList.innerHTML = `<div class="empty">${state.historyTab === "favorites" ? "暂无收藏" : "暂无历史记录"}</div>`;
+        return;
+      }
+      historyList.innerHTML = visible.map((item) => `
+        <div class="history-item">
+          <strong>${escapeHtml(item.title)}</strong>
+          <small>${new Date(item.createdAt).toLocaleString("zh-CN", { hour12: false })}</small>
+          <small>${escapeHtml(item.cn.slice(0, 70))}${item.cn.length > 70 ? "..." : ""}</small>
+          <div class="history-actions">
+            <button class="button mini" type="button" data-load-history="${item.id}">载入</button>
+            <button class="button mini ${item.favorite ? "saved" : ""}" type="button" data-fav-history="${item.id}">${item.favorite ? "已收藏" : "收藏"}</button>
+            <button class="button mini" type="button" data-copy-history="${item.id}">复制</button>
+            <button class="button mini" type="button" data-delete-history="${item.id}">删除</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#039;"
+      })[char]);
+    }
+
+    function loadHistoryItem(id) {
+      const item = getHistory().find((entry) => entry.id === id);
+      if (!item) return;
+      state.activeTemplate = item.template || "";
+      state.values = JSON.parse(JSON.stringify(item.values));
+      syncInputs();
+      updateResult();
+      showToast("已载入历史提示词");
+    }
+
+    function toggleFavorite(id) {
+      const history = getHistory().map((item) => {
+        if (item.id === id) return { ...item, favorite: !item.favorite };
+        return item;
+      });
+      setHistory(history);
+      renderHistory();
+    }
+
+    function deleteHistoryItem(id) {
+      setHistory(getHistory().filter((item) => item.id !== id));
+      renderHistory();
+      showToast("已删除");
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const helper = document.createElement("textarea");
+        helper.value = text;
+        document.body.appendChild(helper);
+        helper.select();
+        document.execCommand("copy");
+        helper.remove();
+      }
+      showToast("已复制");
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function bindEvents() {
+      builder.addEventListener("input", (event) => {
+        const input = event.target.closest("[data-input]");
+        if (!input) return;
+        const index = input.dataset.lang === "cn" ? 0 : 1;
+        state.values[input.dataset.input][index] = input.value;
+        updateResult();
+      });
+
+      builder.addEventListener("click", (event) => {
+        const chip = event.target.closest("[data-chip-field]");
+        if (!chip) return;
+        setFieldValue(chip.dataset.chipField, chip.dataset.cn, chip.dataset.en, true);
+        syncInputs();
+        updateResult();
+      });
+
+      templateList.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-template]");
+        if (button) applyTemplate(button.dataset.template);
+      });
+
+      document.querySelectorAll("[data-copy]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const mode = button.dataset.copy;
+          if (mode === "cn") copyText(getPrompt("cn"));
+          if (mode === "en") copyText(getPrompt("en"));
+          if (mode === "both") copyText(`中文 Prompt:\n${getPrompt("cn")}\n\nEnglish Prompt:\n${getPrompt("en")}`);
+        });
+      });
+
+      document.querySelector("#saveBtn").addEventListener("click", () => saveCurrent(false));
+      document.querySelector("#saveBtnSecondary").addEventListener("click", () => saveCurrent(false));
+      document.querySelector("#favoriteCurrentBtn").addEventListener("click", () => saveCurrent(true));
+      document.querySelector("#favoriteMobileBtn").addEventListener("click", () => saveCurrent(true));
+      document.querySelector("#resetBtn").addEventListener("click", () => {
+        state.activeTemplate = "";
+        state.values = Object.fromEntries(fields.map((field) => [field.key, ["", ""]]));
+        syncInputs();
+        updateResult();
+        showToast("已清空");
+      });
+      document.querySelector("#clearHistoryBtn").addEventListener("click", () => {
+        setHistory([]);
+        renderHistory();
+        showToast("历史已清空");
+      });
+
+      document.querySelectorAll("[data-history-tab]").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          state.historyTab = tab.dataset.historyTab;
+          document.querySelectorAll("[data-history-tab]").forEach((item) => item.classList.toggle("active", item === tab));
+          renderHistory();
+        });
+      });
+
+      historyList.addEventListener("click", (event) => {
+        const load = event.target.closest("[data-load-history]");
+        const fav = event.target.closest("[data-fav-history]");
+        const copy = event.target.closest("[data-copy-history]");
+        const del = event.target.closest("[data-delete-history]");
+        if (load) loadHistoryItem(load.dataset.loadHistory);
+        if (fav) toggleFavorite(fav.dataset.favHistory);
+        if (copy) {
+          const item = getHistory().find((entry) => entry.id === copy.dataset.copyHistory);
+          if (item) copyText(`中文 Prompt:\n${item.cn}\n\nEnglish Prompt:\n${item.en}`);
+        }
+        if (del) deleteHistoryItem(del.dataset.deleteHistory);
+      });
+    }
+
+    renderBuilder();
+    renderTemplates();
+    bindEvents();
+    applyTemplate("portrait");
+    renderHistory();
+  </script>
+</body>
+</html>

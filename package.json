@@ -1,0 +1,22 @@
+{
+  "name": "video_prompt_generator",
+  "version": "1.0.0",
+  "description": "AI video prompt generator",
+  "private": false,
+  "scripts": {
+    "start": "python3 -m http.server 5173",
+    "test": "node -e \"require('fs').accessSync('index.html'); require('fs').accessSync('README.md')\""
+  },
+  "keywords": [
+    "ai-video",
+    "prompt",
+    "seedance"
+  ],
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://holynova.github.io/video_prompt_generator/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holynova/video_prompt_generator.git"
+  }
+}
