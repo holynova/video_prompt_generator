@@ -6,3 +6,7 @@
 
 Repo: https://github.com/holynova/video_prompt_generator  
 Pages: https://holynova.github.io/video_prompt_generator/
+
+Cloudflare: https://video-prompt-generator.xiaosang.cc/
+
+No-build root static publishing is used; the Cloudflare Worker serves `index.html` directly.

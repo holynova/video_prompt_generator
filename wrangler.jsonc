@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "video-prompt-generator",
+  "compatibility_date": "2026-09-04",
+  "workers_dev": false,
+  "assets": {
+    "directory": "."
+  },
+  "routes": [
+    {
+      "pattern": "video-prompt-generator.xiaosang.cc",
+      "custom_domain": true
+    }
+  ]
+}
