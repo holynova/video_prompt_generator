@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">视频提示词生成器</title>
+  <desc id="desc">本地网页工具，用模板生成中英文 AI 视频 Prompt。</desc>
+  <rect width="1200" height="360" rx="28" fill="#13171d"/>
+  <path d="M0 310C250 280 410 342 650 300s350-18 550 20v40H0Z" fill="#7db2bd" opacity=".12"/>
+  <text x="58" y="52" fill="#d8874f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" letter-spacing="2.5">PROMPT · SHOT · MOTION</text>
+  <path d="M58 70H710" stroke="#7db2bd" stroke-width="2" opacity=".6"/>
+  <text x="58" y="126" fill="#eef2ef" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, sans-serif" font-size="52" font-weight="700">视频提示词生成器</text>
+  <text x="60" y="190" fill="#7db2bd" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, sans-serif" font-size="21">本地网页工具，用模板生成中英文 AI 视频 Prompt。</text>
+    <g transform="translate(60 244)"><rect width="250" height="34" rx="17" fill="#d8874f"/><text x="18" y="23" fill="#13171d" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14">PROJECT-NATIVE README</text></g>
+  <g transform="translate(790 52)"><rect width="350" height="248" rx="16" fill="#eef2ef"/><circle cx="28" cy="26" r="6" fill="#d8874f"/><circle cx="50" cy="26" r="6" fill="#7db2bd"/><circle cx="72" cy="26" r="6" fill="#d5d6ce"/><path d="M32 78h180M32 112h260M32 146h212M32 180h174" stroke="#7db2bd" stroke-width="7" stroke-linecap="round" opacity=".9"/><path d="M34 218h22" stroke="#d8874f" stroke-width="8" stroke-linecap="round"/></g>
+</svg>
