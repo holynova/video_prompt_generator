@@ -2,6 +2,11 @@
 
 本地网页工具，用模板生成中英文 AI 视频 Prompt。
 
+<p align="center">
+  <img src="assets/readme/hero.svg" width="100%" alt="视频提示词生成器: 本地网页工具，用模板生成中英文 AI 视频 Prompt。">
+</p>
+
+
 ![截图](assets/screenshot.png)
 
 [在线生成提示词](https://holynova.github.io/video_prompt_generator/) · [源码](https://github.com/holynova/video_prompt_generator)
