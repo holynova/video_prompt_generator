@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200" height="360" viewBox="0 0 1200 360"
+     role="img" aria-labelledby="title desc">
+  <title id="title">视频提示词生成器 Video Prompt Generator — 中英双语 AI 视频提示词</title>
+  <desc id="desc">暖纸底标题：视频提示词生成器，副标题选模板，填细节，一键出中英双语提示词；右侧是一张结果卡片，中文与英文提示词上下排列，配复制双语按钮。</desc>
+
+  <rect width="1200" height="360" rx="26" fill="#f5f4f0"/>
+
+  <g id="title-block" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+    <text x="56" y="62" font-size="19" letter-spacing="3" fill="#1a4fd4">AI VIDEO PROMPT BUILDER · 按 SEEDANCE 通用结构</text>
+    <text x="56" y="128" font-size="62" font-weight="700" fill="#1a1a17">视频提示词生成器</text>
+    <text x="56" y="168" font-size="23" fill="#1a1a17">VIDEO PROMPT GENERATOR — 选模板，填细节</text>
+    <text x="56" y="204" font-size="19" fill="#66665e">一键生成中英双语提示词，粘贴到即梦 / Kling / Sora 就能用。</text>
+    <g id="chips" font-size="18" fill="#1a1a17" text-anchor="middle">
+      <g><rect x="56" y="238" width="140" height="36" rx="18" fill="#fdfdfc" stroke="#e2e1da" stroke-width="1.5"/><text x="126" y="262">7 个场景模板</text></g>
+      <g><rect x="208" y="238" width="140" height="36" rx="18" fill="#fdfdfc" stroke="#e2e1da" stroke-width="1.5"/><text x="278" y="262">8 个画面字段</text></g>
+      <g><rect x="360" y="238" width="140" height="36" rx="18" fill="#fdfdfc" stroke="#e2e1da" stroke-width="1.5"/><text x="430" y="262">中英双语输出</text></g>
+      <g><rect x="512" y="238" width="140" height="36" rx="18" fill="#fdfdfc" stroke="#e2e1da" stroke-width="1.5"/><text x="582" y="262">历史 + 收藏</text></g>
+    </g>
+  </g>
+
+  <g id="result-card" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif">
+    <rect x="800" y="44" width="344" height="272" rx="16" fill="#fdfdfc" stroke="#e2e1da" stroke-width="1.5"/>
+    <text x="824" y="78" font-size="18" letter-spacing="1" fill="#66665e">中文 PROMPT</text>
+    <text x="824" y="178" font-size="18" letter-spacing="1" fill="#66665e">ENGLISH PROMPT</text>
+    <g id="cn-box">
+      <rect x="824" y="88" width="296" height="64" rx="10" fill="#eaf0fe"/>
+      <rect x="840" y="104" width="220" height="10" rx="5" fill="#b9cbf5"/>
+      <rect x="840" y="122" width="264" height="10" rx="5" fill="#b9cbf5"/>
+    </g>
+    <g id="en-box">
+      <rect x="824" y="188" width="296" height="64" rx="10" fill="#eaf0fe"/>
+      <rect x="840" y="204" width="252" height="10" rx="5" fill="#b9cbf5"/>
+      <rect x="840" y="222" width="196" height="10" rx="5" fill="#b9cbf5"/>
+    </g>
+    <g id="copy-btn" font-size="18" fill="#ffffff" text-anchor="middle">
+      <rect x="824" y="264" width="120" height="36" rx="18" fill="#1a4fd4"/>
+      <text x="884" y="288">复制双语</text>
+    </g>
+  </g>
+</svg>
